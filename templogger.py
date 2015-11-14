@@ -132,11 +132,10 @@ def main():
 #  bus = smbus.SMBus(SMBUSID)
 
   try:
-
+    INTERVAL = 1
     temperature = random.random()
     pressure = random.random()
     while True:
-      print "trying"
 #      GPIO.output(LEDGPIO, True)
 #      (temperature,pressure)=bmp180.readBmp180(DEVICE)
 #      sendData(THINGSPEAKURL,THINGSPEAKKEY,'field1','field2',temperature,pressure)
@@ -148,7 +147,7 @@ def main():
 
       # Toggle LED while we wait for next reading
       for i in range(0,INTERVAL*10):
-        print "in loop"
+        print i
 #        GPIO.output(LEDGPIO, not GPIO.input(LEDGPIO))
         temperature = random.random()
         pressure = random.random()
