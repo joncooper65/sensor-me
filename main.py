@@ -37,6 +37,8 @@
 
 # Now that's done, lets write a program - there are a couple of examples in the example folder that came down with the code
 
+#Remember: use crontab -e to configure program to run at startup
+
 #!/usr/bin/python
 import Adafruit_BMP.BMP085 as BMP085
 import smbus
@@ -72,6 +74,20 @@ def sendData(url,key,temp,pres):
     log = log + 'Unknown error'
     print log
 
+def logData(temp,pres):
+  with open("/home/pi/Scripts/sensor-me/temp_pres_logger.txt", "a+") as myfile:
+    myfile.write(str(temp) + ","  + str(pres) + "\n")
+
+def toggleLED(interval,GPIO,ledGpio):
+  # Toggle LED while we wait for next reading
+  for i in range(0,interval):
+#    GPIO.output(ledGpio, not GPIO.input(ledGpio))
+    if i==1 :
+      GPIO.output(ledGpio, True)
+    else:
+      GPIO.output(ledGpio, False)
+    time.sleep(1)
+
 def main():
 
   # Setup GPIO
@@ -82,22 +98,22 @@ def main():
 
   try:
     sensor = BMP085.BMP085()
+    interval = 60
+    with open("/home/pi/Scripts/sensor-me/temp_pres_logger.txt", "a+") as myfile:
+      myfile.write("Interval between readings is " + str(interval) + "s\n")
     while True:
       temperature = sensor.read_temperature()
       pressure = sensor.read_pressure()
-      sendData('https://api.thingspeak.com/update','84T4PU3OJKFDE6MC',temperature,pressure)
+#      sendData('https://api.thingspeak.com/update','84T4PU3OJKFDE6MC',temperature,pressure)
+      logData(temperature,pressure)
       sys.stdout.flush()
 
-      print 'Temp = {0:0.2f} *C'.format(temperature)
-      print 'Pressure = {0:0.2f} Pa'.format(pressure)
-      print 'Altitude = {0:0.2f} m'.format(sensor.read_altitude())
-      print 'Sealevel Pressure = {0:0.2f} Pa'.format(sensor.read_sealevel_pressure())
+#      print 'Temp = {0:0.2f} *C'.format(temperature)
+#      print 'Pressure = {0:0.2f} Pa'.format(pressure)
+#      print 'Altitude = {0:0.2f} m'.format(sensor.read_altitude())
+#      print 'Sealevel Pressure = {0:0.2f} Pa'.format(sensor.read_sealevel_pressure())
 
-      # Toggle LED while we wait for next reading
-      #Delay for a minute - Thingspeak doesn't accept more than one post per 15s per channel
-      for i in range(0,60):
-        GPIO.output(ledGpio, not GPIO.input(ledGpio))
-        time.sleep(1)
+      toggleLED(interval,GPIO,ledGpio)
 
   except Exception, e:
     GPIO.cleanup()
